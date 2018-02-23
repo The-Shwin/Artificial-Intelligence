@@ -90,6 +90,37 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def uninformed_search(problem, search_type='dfs'):
+    visited_states = set()
+    if search_type == 'dfs':
+        states_struct = util.Stack()
+    elif search_type == 'bfs':
+        states_struct = util.Queue()
+        visited_states.add(problem.getStartState())
+
+    start_state = Position(problem.getStartState(), [])
+    states_struct.push(start_state)
+
+    while not states_struct.isEmpty():
+        current_position = states_struct.pop()
+        current_state, prior_moves = current_position.getState(), current_position.getMoves()
+
+        if problem.isGoalState(current_state):
+            return prior_moves
+        else:
+            if current_state not in visited_states and search_type =='dfs':
+                visited_states.add(current_state)
+            successor_list = problem.getSuccessors(current_state)
+            for successor in successor_list:
+                if successor[0] not in visited_states:
+                    post_moves = list(prior_moves)
+                    post_moves.append(successor[1])
+                    next = Position(successor[0], post_moves)
+                    if search_type == 'bfs':
+                        visited_states.add(successor[0])
+                    states_struct.push(next)
+    return []
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -105,67 +136,13 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    # Comment for dfs to create my thought process for initial setups/searching
-    # Store past states without duplication
-    visited_states = set()
-    # Stack of states
-    state_stack = util.Stack()
-    # Rather than create a separate class, I'm just using tuples of
-    # state and prev_moves, respectively, to represent nodes
-    start_state = Position(problem.getStartState(), [])
-    # Pushes the start state onto the stack
-    state_stack.push(start_state)
-
-    while not state_stack.isEmpty():
-        # Pops the last state added
-        current_position = state_stack.pop()
-        current_state, prior_moves = current_position.getState(), current_position.getMoves()
-        # Check if goal state
-        if problem.isGoalState(current_state):
-            return prior_moves
-        else:
-            if current_state not in visited_states:
-                visited_states.add(current_state)
-            # Gets successors of the popped state
-            successor_list = problem.getSuccessors(current_state)
-            for successor in successor_list:
-                if successor[0] not in visited_states:
-                    post_moves = list(prior_moves)
-                    post_moves.append(successor[1])
-                    next = Position(successor[0], post_moves)
-                    # Adds sucessor state of current state to the stack
-                    state_stack.push(next)
-    return []
-
+    return uninformed_search(problem, 'dfs')
     #util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-
-    visited_states = set()
-    visited_states.add(problem.getStartState())
-    state_queue = util.Queue()
-    start_state = Position(problem.getStartState(), [])
-    state_queue.push(start_state)
-
-    while not state_queue.isEmpty():
-        current_position = state_queue.pop()
-        current_state, prior_moves = current_position.getState(), current_position.getMoves()
-
-        if problem.isGoalState(current_state):
-            return prior_moves
-        else:
-            successor_list = problem.getSuccessors(current_state)
-            for successor in successor_list:
-                if successor[0] not in visited_states:
-                    post_moves = list(prior_moves)
-                    post_moves.append(successor[1])
-                    next = Position(successor[0], post_moves)
-                    visited_states.add(successor[0])
-                    state_queue.push(next)
-    return []
-
+    return uninformed_search(problem, 'bfs')
     #util.raiseNotDefined()
 
 def priority_based_search(problem, use_heuristic=False, heuristic=None):
