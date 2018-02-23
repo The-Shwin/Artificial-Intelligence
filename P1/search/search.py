@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -61,6 +61,24 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
+class Position:
+    """
+        Class for tracking states/positions. Has current state and moves
+        to reach that state.
+    """
+    def __init__(self, state, moves, cost=None):
+        self.state = state
+        self.moves = moves
+        self.cost = cost
+
+    def getState(self):
+        return self.state
+
+    def getMoves(self):
+        return self.moves
+
+    def getCost(self):
+        return self.cost
 
 def tinyMazeSearch(problem):
     """
@@ -87,17 +105,115 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Comment for dfs to create my thought process for initial setups/searching
+    # Store past states without duplication
+    visited_states = set()
+    # Stack of states
+    state_stack = util.Stack()
+    # Rather than create a separate class, I'm just using tuples of
+    # state and prev_moves, respectively, to represent nodes
+    start_state = Position(problem.getStartState(), [])
+    # Pushes the start state onto the stack
+    state_stack.push(start_state)
+
+    while not state_stack.isEmpty():
+        # Pops the last state added
+        current_position = state_stack.pop()
+        current_state, prior_moves = current_position.getState(), current_position.getMoves()
+        # Check if goal state
+        if problem.isGoalState(current_state):
+            return prior_moves
+        else:
+            if current_state not in visited_states:
+                visited_states.add(current_state)
+            # Gets successors of the popped state
+            successor_list = problem.getSuccessors(current_state)
+            for successor in successor_list:
+                if successor[0] not in visited_states:
+                    post_moves = list(prior_moves)
+                    post_moves.append(successor[1])
+                    next = Position(successor[0], post_moves)
+                    # Adds sucessor state of current state to the stack
+                    state_stack.push(next)
+    return []
+
+    #util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
-def uniformCostSearch(problem):
+    visited_states = set()
+    visited_states.add(problem.getStartState())
+    state_queue = util.Queue()
+    start_state = Position(problem.getStartState(), [])
+    state_queue.push(start_state)
+
+    while not state_queue.isEmpty():
+        current_position = state_queue.pop()
+        current_state, prior_moves = current_position.getState(), current_position.getMoves()
+
+        if problem.isGoalState(current_state):
+            return prior_moves
+        else:
+            successor_list = problem.getSuccessors(current_state)
+            for successor in successor_list:
+                if successor[0] not in visited_states:
+                    post_moves = list(prior_moves)
+                    post_moves.append(successor[1])
+                    next = Position(successor[0], post_moves)
+                    visited_states.add(successor[0])
+                    state_queue.push(next)
+    return []
+
+    #util.raiseNotDefined()
+
+def priority_based_search(problem, use_heuristic=False, heuristic=None):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    state_queue = util.PriorityQueue()
+    start_state = Position(problem.getStartState(), [], 0)
+    visited_states = set()
+    state_queue.push(start_state, 0)
+
+    while not state_queue.isEmpty():
+        current_position = None
+        visited_pos = False
+        while not state_queue.isEmpty() and not visited_pos:
+            current_position = state_queue.pop()
+            if current_position.getState() not in visited_states:
+                visited_pos = True
+
+        # Checks if the while loop was entered
+        if current_position == None:
+            break
+
+        current_state = current_position.getState()
+        prior_moves = current_position.getMoves()
+        position_cost = current_position.getCost()
+
+        if problem.isGoalState(current_state):
+            return prior_moves
+        else:
+            if current_state not in visited_states:
+                visited_states.add(current_state)
+            successor_list = problem.getSuccessors(current_state)
+
+            for successor in successor_list:
+                if successor[0] not in visited_states:
+                    next_moves = list(prior_moves)
+                    next_moves.append(successor[1])
+                    update_cost = successor[2] + position_cost
+                    next_position = Position(successor[0], next_moves, update_cost)
+                    if use_heuristic is True and heuristic is not None:
+                        update_cost = update_cost + heuristic(successor[0], problem)
+                    state_queue.push(next_position, update_cost)
+    return []
+    #util.raiseNotDefined()
+
+def uniformCostSearch(problem):
+    return priority_based_search(problem)
 
 def nullHeuristic(state, problem=None):
     """
@@ -109,7 +225,8 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return priority_based_search(problem, True, heuristic)
+    #util.raiseNotDefined()
 
 
 # Abbreviations
